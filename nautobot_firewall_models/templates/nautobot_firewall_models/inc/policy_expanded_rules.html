@@ -9,6 +9,13 @@
         <div class="card">
             <div class="card-header">
                 <strong>Policy Rule Expanded</strong>
+                {% if policy_rules_page %}
+                    <form class="d-inline-flex float-end gap-2" method="get">
+                        <input type="hidden" name="tab" value="policy-rules" />
+                        <input type="text" class="form-control form-control-sm" name="policy_rules_search" value="{{ policy_rules_search }}" placeholder="Search by rule name, address object or group..." />
+                        <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                    </form>
+                {% endif %}
             </div>
             <table class="table table-hover card-body">
                 {% include "nautobot_firewall_models/inc/policyrule_tablehead.html" %}
