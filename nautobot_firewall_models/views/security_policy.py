@@ -2,6 +2,7 @@
 
 from types import SimpleNamespace
 
+from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from nautobot.apps.views import NautobotUIViewSet
@@ -74,12 +75,25 @@ class PolicyUIViewSet(NautobotUIViewSet):
 
         if instance:
             rules = instance.policy_rules.all()
-            per_page = get_paginate_count(request)
+
+            # Search filter: by rule name, address object name, or address object group name
+            search_query = request.GET.get("policy_rules_search", "").strip()
+            if search_query:
+                rules = rules.filter(
+                    Q(name__icontains=search_query)
+                    | Q(source_addresses__name__icontains=search_query)
+                    | Q(destination_addresses__name__icontains=search_query)
+                    | Q(source_address_groups__name__icontains=search_query)
+                    | Q(destination_address_groups__name__icontains=search_query)
+                ).distinct()
+
+            per_page = min(get_paginate_count(request), 500)
             page_number = request.GET.get("page", 1)
             paginator = EnhancedPaginator(rules, per_page)
             rules_page = paginator.get_page(page_number)
             context["policy_rules_page"] = rules_page
             context["policy_rules_paginator"] = paginator
+            context["policy_rules_search"] = search_query
 
             # `inc/paginator.html` builds its links from `request.GET`, which does not carry the
             # active tab (tabs are swapped client-side via pushState, not a page reload). Pass it
